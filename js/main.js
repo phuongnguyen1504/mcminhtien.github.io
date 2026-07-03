@@ -65,179 +65,195 @@
       .join("");
   }
 
-  /* ---------- Thẻ dùng chung cho services / programs ---------- */
-  function cardHTML(item) {
-    return `
-      <article class="card reveal">
-        <div class="card-media"><img src="${item.image}" alt="${item.title}" loading="lazy"></div>
-        <div class="card-body">
-          <h3 class="card-title">${item.title}</h3>
-          <p class="card-desc">${item.desc}</p>
-        </div>
-      </article>`;
+  /* Tách chữ đầu tiên để tô màu vàng nghiêng (giống .frist-word trang tham khảo) */
+  function firstWordHTML(text) {
+    const i = text.indexOf(" ");
+    if (i < 0) return `<span class="first-word">${text}</span>`;
+    return `<span class="first-word">${text.slice(0, i)}</span>${text.slice(i)}`;
   }
 
+  /* Bọc từng từ trong <span class="word"> để chạy hiệu ứng hiện chữ từng từ */
+  function splitWords(el, firstWordAccent) {
+    const words = el.textContent.trim().split(/\s+/);
+    el.innerHTML = words
+      .map((w, i) => `<span class="word${firstWordAccent && i === 0 ? " first-word" : ""}">${w}</span>`)
+      .join(" ");
+  }
+
+  /* ----- Lĩnh vực hoạt động: slider kiểu "Tango" (coverflow + clip-path) ----- */
   function renderServices() {
-    // Render carousel for services (autoplay 4s)
-    createCarousel("#services-grid", D.services, { visibleSlides: 3, autoplay: 4000 });
-  }
+    const root = $("#services-grid");
+    root.classList.remove("card-grid", "cols-4");
 
-  function renderPrograms() {
-    // Render carousel for programs (show larger slide, autoplay 4s)
-    createCarousel("#programs-grid", D.programs, { visibleSlides: 1, autoplay: 4000 });
-  }
+    const arrowLeft = `<svg width="30" height="30" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M7.854 6.646a.5.5 0 010 .708L5.207 10l2.647 2.646a.5.5 0 01-.708.708l-3-3a.5.5 0 010-.708l3-3a.5.5 0 01.708 0z" clip-rule="evenodd"/><path fill-rule="evenodd" d="M16 10a.5.5 0 01-.5.5H5a.5.5 0 010-1h10.5A.5.5 0 0116 10z" clip-rule="evenodd"/></svg>`;
+    const arrowRight = `<svg width="30" height="30" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M12.146 6.646a.5.5 0 01.708 0l3 3a.5.5 0 010 .708l-3 3a.5.5 0 01-.708-.708L14.793 10l-2.647-2.646a.5.5 0 010-.708z" clip-rule="evenodd"/><path fill-rule="evenodd" d="M4 10a.5.5 0 01.5-.5H15a.5.5 0 010 1H4.5A.5.5 0 014 10z" clip-rule="evenodd"/></svg>`;
 
-  /* ---------- Carousel builder (reusable) ---------- */
-  function createCarousel(containerSelector, items, opts = {}) {
-    const container = document.querySelector(containerSelector);
-    if (!container) return;
-    // Remove grid classes (card-grid / cols-*) so carousel can be full-width
-    container.classList.remove('card-grid', 'cols-4', 'cols-3', 'cols-2');
-    // build markup
-    const trackId = containerSelector.replace(/[#.]/g, "") + "-carousel";
-    container.innerHTML = `
-      <div class="carousel" id="${trackId}" tabindex="0">
-        <div class="carousel-track"></div>
-        <div class="carousel-nav">
-          <button class="carousel-prev" aria-label="Trước">&#10094;</button>
-          <button class="carousel-next" aria-label="Sau">&#10095;</button>
+    root.innerHTML = `
+      <div class="ps-tango">
+        <div class="swiper">
+          <div class="swiper-wrapper">
+            ${D.services
+              .map(
+                (it) => `
+              <div class="swiper-slide">
+                <div class="ps-image-wrap"><img src="${it.image}" alt="${it.title}" loading="lazy"></div>
+                <div class="ps-content-wrap">
+                  <div class="ps-subtitle">${it.title}</div>
+                  <h3 class="ps-title">${firstWordHTML(it.desc)}</h3>
+                </div>
+              </div>`
+              )
+              .join("")}
+          </div>
         </div>
-        <div class="carousel-thumbs" aria-hidden="false"></div>
+        <button class="ps-nav-prev" aria-label="Slide trước">${arrowLeft}</button>
+        <button class="ps-nav-next" aria-label="Slide sau">${arrowRight}</button>
       </div>`;
 
-    const carousel = container.querySelector(".carousel");
-    const track = carousel.querySelector(".carousel-track");
-    const thumbs = carousel.querySelector(".carousel-thumbs");
-    const prevBtn = carousel.querySelector(".carousel-prev");
-    const nextBtn = carousel.querySelector(".carousel-next");
+    if (typeof Swiper === "undefined") return;
 
-    // populate slides
-    track.innerHTML = items
-      .map((it) => `<div class="carousel-slide">${cardHTML(it)}</div>`) 
-      .join("");
-    thumbs.innerHTML = items
-      .map((it, i) => `<button class="carousel-thumb" data-index="${i}" aria-label="Xem ${i+1}"><img src="${it.image}" alt="thumb-${i}"></button>`) 
-      .join("");
-
-    const slides = Array.from(track.children);
-    const thumbBtns = Array.from(thumbs.children);
-    let index = 0;
-    let isDragging = false, startX = 0, currentTranslate = 0;
-    const autoplayMs = opts.autoplay || 0;
-    let autoplayTimer = null;
-    // responsive visibleSlides: adapt to viewport
-    function computeVisible() {
-      const defaultVisible = opts.visibleSlides || 1;
-      const w = window.innerWidth;
-      if (w <= 480) return 1;
-      if (w <= 1024) return Math.min(defaultVisible, 2);
-      return defaultVisible;
-    }
-
-    function applySlideSizing() {
-      const visible = computeVisible();
-      slides.forEach((s) => {
-        s.style.flex = `0 0 ${100 / visible}%`;
-      });
-    }
-    applySlideSizing();
-
-    function update() {
-      const activeSlide = slides[index];
-      // center active slide inside carousel and clamp
-      const containerWidth = carousel.clientWidth;
-      const slideCenter = activeSlide.offsetLeft + activeSlide.offsetWidth / 2;
-      let offset = slideCenter - containerWidth / 2;
-      const maxOffset = Math.max(0, track.scrollWidth - containerWidth);
-      offset = Math.max(0, Math.min(offset, maxOffset));
-      track.style.transform = `translateX(${-offset}px)`;
-      // active class
-      slides.forEach((s, i) => s.classList.toggle('active', i === index));
-      thumbBtns.forEach((b, i) => b.classList.toggle("active", i === index));
-
-      // parallax: translate inner images subtly based on distance from center
-      slides.forEach((s) => {
-        const img = s.querySelector('.card-media img');
-        if (!img) return;
-        const sCenter = s.offsetLeft + s.offsetWidth / 2;
-        // relative position -1..1
-        const rel = ((sCenter - offset) - containerWidth / 2) / containerWidth;
-        const maxShift = 12; // percent
-        const shift = Math.max(-1, Math.min(1, rel)) * maxShift;
-        img.style.transform = `translateX(${ -shift }%)`;
-      });
-    }
-
-    function goto(i) {
-      index = ((i % slides.length) + slides.length) % slides.length;
-      update();
-      // reset autoplay timer when user explicitly navigates
-      if (autoplayMs) {
-        stopAutoplay(); startAutoplay();
-      }
-    }
-
-    prevBtn.addEventListener("click", () => goto(index - 1));
-    nextBtn.addEventListener("click", () => goto(index + 1));
-
-    // click thumb
-    thumbs.addEventListener("click", (e) => {
-      const b = e.target.closest(".carousel-thumb");
-      if (!b) return;
-      goto(Number(b.dataset.index));
+    // Cấu hình giống trang tham khảo: autoplay 4s, speed 900ms, slide giữa nổi bật
+    const swiper = new Swiper(root.querySelector(".swiper"), {
+      loop: true,
+      speed: 900,
+      autoplay: { delay: 4000, disableOnInteraction: false },
+      centeredSlides: true,
+      slidesPerView: 1,
+      spaceBetween: 20,
+      breakpoints: {
+        768:  { slidesPerView: 2, spaceBetween: 20 },
+        1024: { slidesPerView: 3, spaceBetween: 20 },
+      },
+      navigation: {
+        prevEl: root.querySelector(".ps-nav-prev"),
+        nextEl: root.querySelector(".ps-nav-next"),
+      },
     });
 
-    // keyboard
-    carousel.addEventListener("keydown", (e) => {
-      if (e.key === "ArrowLeft") goto(index - 1);
-      if (e.key === "ArrowRight") goto(index + 1);
+    // Tạm dừng autoplay khi rê chuột vào (pauseOnHover)
+    const tango = root.querySelector(".ps-tango");
+    tango.addEventListener("mouseenter", () => swiper.autoplay.stop());
+    tango.addEventListener("mouseleave", () => swiper.autoplay.start());
+  }
+
+  /* ----- Chương trình nổi bật: slider kiểu "Avatar" (thẻ nhỏ phóng to thành nền) ----- */
+  function renderPrograms() {
+    const root = $("#programs-grid");
+    root.classList.remove("card-grid", "cols-3");
+
+    root.innerHTML = `
+      <div class="ps-avatar">
+        <div class="ps-av-fullsize"></div>
+        <div class="ps-av-swiper swiper">
+          <div class="swiper-wrapper">
+            ${D.programs
+              .map(
+                (it) => `
+              <div class="swiper-slide">
+                <div class="ps-av-content">
+                  <img class="ps-av-img" src="${it.image}" alt="${it.title}" loading="lazy">
+                  <div class="ps-av-text">
+                    <h3 class="ps-av-title">${it.title}</h3>
+                    <div class="ps-av-desc"><p>${it.desc}</p></div>
+                  </div>
+                </div>
+              </div>`
+              )
+              .join("")}
+          </div>
+          <button class="ps-av-next" aria-label="Chương trình kế tiếp">
+            <svg width="30" height="30" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M12.146 6.646a.5.5 0 01.708 0l3 3a.5.5 0 010 .708l-3 3a.5.5 0 01-.708-.708L14.793 10l-2.647-2.646a.5.5 0 010-.708z" clip-rule="evenodd"/><path fill-rule="evenodd" d="M4 10a.5.5 0 01.5-.5H15a.5.5 0 010 1H4.5A.5.5 0 014 10z" clip-rule="evenodd"/></svg>
+          </button>
+        </div>
+      </div>`;
+
+    if (typeof Swiper === "undefined") return;
+
+    const container = root.querySelector(".ps-avatar");
+    const fullsize = container.querySelector(".ps-av-fullsize");
+
+    // Nhân bản nội dung mỗi slide thành lớp "hero" full khung + tách chữ từng từ
+    const clones = Array.from(container.querySelectorAll(".ps-av-content"), (el) => {
+      const c = el.cloneNode(true);
+      splitWords(c.querySelector(".ps-av-title"), true);
+      c.querySelectorAll(".ps-av-desc p").forEach((p) => splitWords(p, false));
+      c.classList.add("ps-av-hero", "is-hidden");
+      fullsize.appendChild(c);
+      return c;
     });
 
-    // swipe support (pointer events)
-    track.addEventListener("pointerdown", (e) => {
-      isDragging = true; startX = e.clientX; track.setPointerCapture(e.pointerId);
-      // pause autoplay while dragging
-      if (autoplayMs) stopAutoplay();
-    });
-    track.addEventListener("pointermove", (e) => {
-      if (!isDragging) return;
-      const dx = e.clientX - startX;
-      track.style.transform = `translateX(${ -slides[index].offsetLeft + dx }px)`;
-    });
-    track.addEventListener("pointerup", (e) => {
-      if (!isDragging) return; isDragging = false;
-      const dx = e.clientX - startX;
-      if (dx < -40) goto(index + 1);
-      else if (dx > 40) goto(index - 1);
-      else update();
-      // resume autoplay after interaction
-      if (autoplayMs) startAutoplay();
-    });
-    track.addEventListener("pointercancel", () => { isDragging = false; update(); });
+    const state = { top: null, bottom: null };
 
-    // reposition on resize
-    window.addEventListener("resize", () => { applySlideSizing(); setTimeout(update, 80); });
+    new Swiper(container.querySelector(".ps-av-swiper"), {
+      slidesPerView: 1.5,
+      spaceBetween: 25,
+      loop: true,
+      speed: 500,
+      simulateTouch: false,
+      breakpoints: {
+        768:  { slidesPerView: 2.5 },
+        1024: { slidesPerView: 3.5 },
+      },
+      navigation: { nextEl: container.querySelector(".ps-av-next") },
+      on: {
+        init() {
+          const c = clones[this.realIndex];
+          if (!c) return;
+          c.classList.remove("is-hidden");
+          c.classList.add("is-top");
+          state.top = c;
+        },
+        realIndexChange() {
+          const c = clones[this.realIndex];
+          if (!c || c === state.top) return;
 
-    // initial
-    update();
+          // Lớp nền cũ mờ dần và phóng to nhẹ, lớp mới bay lên trên
+          if (state.bottom) {
+            state.bottom.classList.remove("is-bottom");
+            state.bottom.classList.add("is-hidden");
+          }
+          if (state.top) {
+            state.top.classList.remove("is-top");
+            state.top.classList.add("is-bottom");
+          }
+          state.bottom = state.top;
+          state.top = c;
 
-    // autoplay helpers
-    function startAutoplay() {
-      if (!autoplayMs) return;
-      stopAutoplay();
-      autoplayTimer = setInterval(() => goto(index + 1), autoplayMs);
-    }
-    function stopAutoplay() {
-      if (autoplayTimer) { clearInterval(autoplayTimer); autoplayTimer = null; }
-    }
-    if (autoplayMs) {
-      // pause on hover/focus
-      carousel.addEventListener('mouseenter', stopAutoplay);
-      carousel.addEventListener('mouseleave', startAutoplay);
-      carousel.addEventListener('focusin', stopAutoplay);
-      carousel.addEventListener('focusout', startAutoplay);
-      startAutoplay();
-    }
+          // Đặt clone đúng vị trí thẻ nhỏ đang active rồi thả cho nó "nở" ra full khung
+          const slideRect = this.slides[this.activeIndex].getBoundingClientRect();
+          const rootRect = container.getBoundingClientRect();
+          c.style.transition = "none";
+          c.style.left = slideRect.left - rootRect.left + "px";
+          c.style.top = slideRect.top - rootRect.top + "px";
+          c.style.width = slideRect.width + "px";
+          c.style.height = slideRect.height + "px";
+          c.style.borderRadius = "var(--ps-radius, 0)";
+          c.getBoundingClientRect(); // ép trình duyệt áp vị trí trước khi transition
+          c.classList.remove("is-hidden");
+          c.classList.add("is-top", "is-grow");
+          c.style.transition = "";
+          c.style.left = "";
+          c.style.top = "";
+          c.style.width = "";
+          c.style.height = "";
+          c.style.borderRadius = "";
+
+          // Nở xong thì hiện chữ từng từ; chữ hiện xong thì trả về trạng thái tĩnh
+          const onTextDone = (e) => {
+            if (e.target !== e.currentTarget) {
+              e.currentTarget.classList.remove("show-text");
+              e.currentTarget.removeEventListener("transitionend", onTextDone);
+            }
+          };
+          const onGrowDone = (e) => {
+            e.currentTarget.classList.remove("is-grow");
+            e.currentTarget.classList.add("show-text");
+            e.currentTarget.addEventListener("transitionend", onTextDone);
+          };
+          c.addEventListener("transitionend", onGrowDone, { once: true });
+        },
+      },
+    });
   }
 
   /* ---------- Gallery + lightbox ---------- */

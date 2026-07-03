@@ -443,70 +443,245 @@ ul { list-style: none; }
 }
 
 /* =====================================================================
-   CAROUSEL (services / programs)
-   - track: ngang, overflow hidden
-   - thumbs: nhỏ, active thumb scale up
-   - arrows: lớn, trên slide
+   SLIDER "TANGO" — Lĩnh vực hoạt động
+   (mô phỏng Prime Slider Tango của mcthanhhuyen.com)
+   - Slide 2 bên bị "cắt" 10% trên/dưới bằng clip-path, slide giữa mở full
+   - Chữ hiện sau 0.5s: subtitle trượt từ trái, title trượt từ phải
+   - Autoplay 4s, chuyển slide 900ms, dừng khi rê chuột
    ===================================================================== */
-.carousel { position: relative; overflow: hidden; }
-.carousel { perspective: 1200px; }
-.carousel-track { display: flex; gap: 18px; transition: transform 0.6s cubic-bezier(.22,.9,.32,1); will-change: transform; align-items: center; }
-.carousel-slide { min-width: 100%; flex: 0 0 100%; display: flex; align-items: stretch; padding: 0 12px; }
-.carousel .card { box-shadow: 0 10px 30px var(--color-card-shadow); transform-origin: center center; transition: transform 0.6s cubic-bezier(.22,.9,.32,1), box-shadow 0.35s ease; width: 100%; max-width: 100%; border-radius: 14px; overflow: hidden; background: var(--color-card-bg); }
-.carousel-slide .card { transform: scale(0.86); opacity: 0.95; }
-.carousel-slide.active .card { transform: scale(1); box-shadow: 0 28px 80px var(--color-card-shadow-strong); opacity: 1; }
+.ps-tango { position: relative; }
 
-/* subtle lift for active */
-.carousel-slide.active .card { transform: scale(1) translateY(-8px); }
+.ps-tango .swiper-slide {
+  position: relative;
+  overflow: hidden;
+  height: clamp(25rem, 40vw, 31.25rem);
+  clip-path: inset(10% 0 10% 0);
+  transition: clip-path 0.4s cubic-bezier(.3,0,.3,1), transform 0.4s cubic-bezier(.3,0,.3,1);
+}
+.ps-tango .swiper-slide-active { clip-path: inset(0 0 0 0) !important; }
 
-/* image parallax + soft edges */
-.card-media img { transition: transform 0.6s cubic-bezier(.22,.9,.32,1), filter 0.45s ease; will-change: transform; border-radius: 12px; display: block; }
+.ps-tango .ps-image-wrap { position: relative; width: 100%; height: 100%; }
+.ps-tango .ps-image-wrap img { width: 100%; height: 100%; object-fit: cover; }
+/* lớp phủ tối phía dưới ảnh cho chữ dễ đọc — chỉ hiện ở slide active */
+.ps-tango .ps-image-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(180deg, rgba(11,16,25,0) 40%, rgba(11,16,25,0.9) 100%);
+  opacity: 0;
+  transition: opacity 0.5s cubic-bezier(.3,0,.3,1);
+}
+.ps-tango .swiper-slide-active .ps-image-wrap::before { opacity: 1; transition-delay: 0.6s; }
 
-/* softer card body background */
+.ps-tango .ps-content-wrap {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  z-index: 2;
+  text-align: center;
+  padding: clamp(24px, 4vw, 50px);
+  opacity: 0;
+  transition: opacity 0.3s cubic-bezier(.3,0,.3,1);
+}
+.ps-tango .swiper-slide-active .ps-content-wrap { opacity: 1; transition-delay: 0.5s; }
+
+.ps-tango .ps-subtitle {
+  display: inline-block;
+  font-size: clamp(0.7rem, 1.5vw, 0.85rem);
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--color-gold-light);
+  margin-bottom: 8px;
+  transform: translateX(-50px);
+  transition: transform 0.3s cubic-bezier(.3,0,.3,1);
+}
+.ps-tango .ps-title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: clamp(1.15rem, 2vw, 1.6rem);
+  line-height: 1.45;
+  color: #eff1ff;
+  transform: translateX(50px);
+  transition: transform 0.3s cubic-bezier(.3,0,.3,1);
+}
+.ps-tango .swiper-slide-active .ps-subtitle,
+.ps-tango .swiper-slide-active .ps-title { transform: translateX(0); transition-delay: 0.5s; }
+
+/* chữ đầu câu tô vàng, nghiêng (giống .frist-word trang tham khảo) */
+.first-word { font-style: italic; color: var(--color-gold); }
+
+/* mũi tên 2 bên, hover phóng to + trượt theo hướng */
+.ps-tango .ps-nav-prev,
+.ps-tango .ps-nav-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  background: none;
+  border: 0;
+  padding: 6px;
+  cursor: pointer;
+  color: #fff;
+}
+.ps-tango .ps-nav-prev { left: 20px; }
+.ps-tango .ps-nav-next { right: 20px; }
+.ps-tango .ps-nav-prev svg,
+.ps-tango .ps-nav-next svg { display: block; transition: transform 0.3s ease; }
+.ps-tango .ps-nav-prev:hover svg { transform: scale(1.2) translateX(-5px); }
+.ps-tango .ps-nav-next:hover svg { transform: scale(1.2) translateX(5px); }
+
+/* =====================================================================
+   SLIDER "AVATAR" — Chương trình nổi bật
+   (mô phỏng Prime Slider Avatar của mcthanhhuyen.com)
+   - Dải thẻ nhỏ bên phải; bấm mũi tên → thẻ kế tiếp phóng to (1000ms)
+     thành nền full khung, sau đó tiêu đề/mô tả hiện từng từ (clip-path)
+   ===================================================================== */
+.ps-avatar {
+  --ps-radius: 12px;
+  --ps-dur: 1000ms;
+  position: relative;
+  width: 100%;
+  height: clamp(460px, 65vw, 700px);
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--color-dark-3);
+}
+.ps-av-fullsize { position: absolute; inset: 0; overflow: hidden; z-index: 0; }
+
+/* --- thẻ nội dung (dùng chung cho thẻ nhỏ và lớp hero full khung) --- */
+.ps-av-content {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: var(--ps-radius);
+  z-index: 0;
+}
+.ps-av-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -2;
+}
+/* trong dải thẻ nhỏ chỉ hiện ảnh, chữ ẩn đi */
+.ps-av-swiper .ps-av-text { display: none; }
+
+/* --- lớp hero (bản sao full khung) --- */
+.ps-av-hero {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  overflow: hidden;
+  transition:
+    top var(--ps-dur), left var(--ps-dur),
+    width var(--ps-dur), height var(--ps-dur),
+    border-radius var(--ps-dur), transform var(--ps-dur), opacity var(--ps-dur);
+}
+.ps-av-hero.is-hidden:not(.is-bottom) { visibility: hidden; transition: none; transform: none; opacity: 1; z-index: 0; }
+.ps-av-hero.is-bottom { opacity: 0; transform: scale(1.5); z-index: 1; }
+.ps-av-hero.is-top { top: 0; left: 0; width: 100%; height: 100%; border-radius: 0; z-index: 2 !important; }
+.ps-av-hero.is-bottom.is-top:not(.is-hidden) { opacity: 1; transform: scale(1); }
+
+/* lớp phủ gradient tối bên trái cho chữ dễ đọc, quét vào khi hiện chữ */
+.ps-av-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(11,16,25,0.82), transparent 72%);
+  pointer-events: none;
+  z-index: -1;
+}
+.ps-av-hero.is-grow::before { transform: translateX(-100%); transition: none; }
+.ps-av-hero.show-text::before { transform: translateX(0); transition: transform 300ms cubic-bezier(.3,0,.3,1); }
+
+.ps-av-hero .ps-av-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+  max-width: clamp(450px, 60vw, 630px);
+  padding: clamp(30px, 7vw, 80px);
+}
+.ps-av-hero .ps-av-title {
+  margin: 0 0 clamp(15px, 2vw, 25px);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: clamp(26px, 4vw, 44px);
+  line-height: 1.25;
+  color: #fff;
+}
+.ps-av-hero .ps-av-desc { color: #dddff4; font-size: clamp(14px, 2vw, 16px); line-height: 1.65; }
+.ps-av-hero .word { display: inline-block; }
+
+/* trạng thái trước khi hiện chữ (đang phóng to): chữ ẩn + đẩy xuống */
+.ps-av-hero.is-grow .ps-av-title { visibility: hidden; transform: translateY(48px); transition: none; }
+.ps-av-hero.is-grow .ps-av-title .word { clip-path: inset(0 0 48px); transition: none; }
+.ps-av-hero.is-grow .ps-av-desc  { visibility: hidden; transform: translateY(18px); transition: none; }
+.ps-av-hero.is-grow .ps-av-desc .word  { clip-path: inset(0 0 18px); transition: none; }
+
+/* hiện chữ: trượt lên + từng từ được "mở" bằng clip-path */
+.ps-av-hero.show-text .ps-av-title { transform: translateY(0); transition: transform 300ms cubic-bezier(.3,0,.3,1); }
+.ps-av-hero.show-text .ps-av-title .word { clip-path: inset(0); transition: clip-path 300ms cubic-bezier(.3,0,.3,1); }
+.ps-av-hero.show-text .ps-av-desc  { transform: translateY(0); transition: transform 300ms cubic-bezier(.3,0,.3,1); }
+.ps-av-hero.show-text .ps-av-desc .word  { clip-path: inset(0); transition: clip-path 300ms cubic-bezier(.3,0,.3,1); }
+
+/* --- dải thẻ nhỏ (swiper) nằm bên phải --- */
+.ps-av-swiper {
+  position: absolute !important;
+  width: 100%;
+  aspect-ratio: 2.5 / 1;
+  right: 0;
+  top: 88%;
+  transform: translateY(-80%);
+  padding: 15px 0;
+  z-index: 1;
+  user-select: none;
+  overflow: hidden;
+}
+.ps-av-swiper .swiper-slide { display: flex; }
+/* thẻ đang active (đã phóng to thành nền) và thẻ vừa qua thì ẩn khỏi dải */
+.ps-av-swiper .swiper-slide-active,
+.ps-av-swiper .swiper-slide-prev { opacity: 0; }
+
+/* nút chuyển chương trình kế tiếp */
+.ps-av-next {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  transform: translateY(-50%);
+  left: calc((100% - 24px * 2) / 1.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(4px, 1.5vw, 10px);
+  border: 0;
+  border-radius: 5px;
+  color: #fff;
+  background: rgba(220, 222, 244, 0.43);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(.3,0,.3,1);
+}
+.ps-av-next:hover { background: var(--color-gold); }
+.ps-av-next svg { display: block; }
+
+@media (min-width: 768px) {
+  .ps-av-swiper { width: 56%; top: 50%; transform: translateY(-50%); }
+  .ps-av-next { left: calc((100% - 12px * 2) / 2.5); }
+}
+@media (min-width: 1024px) {
+  .ps-av-swiper { width: 62%; }
+  .ps-av-next { left: calc((100% - 25px * 2) / 3.5); }
+}
+
+/* --- các rule cũ vẫn dùng cho thẻ video --- */
+.card-media img { transition: transform 0.6s cubic-bezier(.22,.9,.32,1), filter 0.45s ease; border-radius: 12px; display: block; }
 .card-body {
   background: var(--color-card-body-bg);
   backdrop-filter: blur(8px);
   box-shadow: inset 0 0 0 1px var(--color-card-body-border);
 }
-
-.carousel-nav { position: absolute; top: 50%; left: 0; right: 0; transform: translateY(-50%); display: flex; justify-content: space-between; align-items: center; padding: 0 12px; z-index: 20; pointer-events: none; }
-.carousel-prev, .carousel-next { background: var(--color-nav-bg); color: #fff; border: 0; width: 44px; height: 44px; border-radius: 44px; cursor: pointer; display: grid; place-items: center; font-size: 20px; pointer-events: auto; }
-
-.carousel-thumbs { display: flex; gap: 10px; margin-top: 18px; align-items: center; overflow: auto; padding-bottom: 6px; }
-.carousel-thumb { border: 0; background: none; padding: 0; width: 86px; height: 56px; flex: 0 0 auto; border-radius: 8px; overflow: hidden; cursor: pointer; transition: transform 0.25s ease, box-shadow 0.25s ease; }
-.carousel-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.carousel-thumb.active { transform: scale(1.08); box-shadow: 0 8px 22px var(--color-thumb-shadow); }
-
-@media (max-width: 1024px) {
-  .carousel-slide { min-width: 50%; flex: 0 0 50%; }
-}
-@media (max-width: 768px) {
-  .carousel-slide { min-width: 100%; flex: 0 0 100%; }
-  .carousel-thumbs { width: 100%; }
-}
-
-/* card content animation: hidden by default, reveal with upward motion when slide is active */
-.carousel-slide .card-body {
-  opacity: 0;
-  transform: translateY(18px);
-  transition: opacity 420ms cubic-bezier(.2,.9,.2,1), transform 420ms cubic-bezier(.2,.9,.2,1);
-  pointer-events: none;
-}
-.carousel-slide.active .card-body {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-.carousel-slide .card-body .card-title,
-.carousel-slide .card-body .card-desc {
-  transform: translateY(6px);
-  transition: transform 420ms cubic-bezier(.2,.9,.2,1), opacity 360ms ease;
-  opacity: 0;
-}
-.carousel-slide.active .card-body .card-title,
-.carousel-slide.active .card-body .card-desc {
-  transform: translateY(0);
-  opacity: 1;
-}
-.carousel-slide .card-body .card-title { transition-delay: 80ms; }
-.carousel-slide .card-body .card-desc  { transition-delay: 140ms; }
