@@ -38,19 +38,33 @@
     $("#testimonial-author").textContent = "— " + D.testimonial.author;
   }
 
-  /* ---------- Giới thiệu ---------- */
+  /* ---------- Giới thiệu (bố cục giống trang tham khảo) ---------- */
   function renderAbout() {
-    $("#about-heading").textContent = D.about.heading;
+    // Watermark "ABOUT ME" khổng lồ phía sau (uppercase bằng CSS)
+    $("#about-watermark").textContent = D.about.heading;
+    // Tên MC hiển thị bằng font viết tay
+    $("#about-name").textContent = D.brand.name;
     $("#about-image").src = D.about.image;
 
+    // Ảnh nền mờ của cả section (tuỳ chọn, đặt trong data.js)
+    if (D.about.background) {
+      $("#gioi-thieu").style.setProperty("--about-bg", `url("${D.about.background}")`);
+    }
+
+    // Đoạn giới thiệu in nghiêng, căn đều 2 bên
     $("#about-paragraphs").innerHTML = D.about.paragraphs
-      .map((p) => `<p>${p}</p>`)
+      .map((p) => `<p><em>${p}</em></p>`)
       .join("");
 
+    // Thẻ thông tin: giá trị in đậm lớn, nhãn nhỏ bên dưới.
+    // Mỗi ô trượt từ phải sang trái (fadeInRight), lần lượt cách nhau 150ms.
     $("#about-facts").innerHTML = D.about.facts
       .map(
-        (f) =>
-          `<li><span class="fact-label">${f.label}</span><span>${f.value}</span></li>`
+        (f, i) => `
+        <div class="fact reveal-right" style="transition-delay: ${i * 150}ms">
+          <h3 class="fact-value">${f.value}</h3>
+          <p class="fact-label">${f.label}</p>
+        </div>`
       )
       .join("");
 
@@ -406,7 +420,9 @@
       },
       { threshold: 0.12 }
     );
-    document.querySelectorAll(".reveal").forEach((el) => revealObserver.observe(el));
+    document
+      .querySelectorAll(".reveal, .reveal-right")
+      .forEach((el) => revealObserver.observe(el));
 
     // Counter: đếm từ 0 lên số đích trong ~1.5 giây khi cuộn tới
     const counterObserver = new IntersectionObserver(
@@ -421,7 +437,10 @@
           const start = performance.now();
           (function tick(now) {
             const progress = Math.min((now - start) / duration, 1);
-            el.textContent = Math.round(target * progress) + suffix;
+            let value = String(Math.round(target * progress));
+            // Số 1 chữ số hiển thị dạng "02", "08" (giống trang tham khảo)
+            if (target < 10) value = value.padStart(2, "0");
+            el.textContent = value + suffix;
             if (progress < 1) requestAnimationFrame(tick);
           })(start);
         });

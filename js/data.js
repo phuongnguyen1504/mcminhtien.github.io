@@ -38,8 +38,9 @@ const SITE_DATA = {
 
   // ------- Giới thiệu bản thân -------
   about: {
-    heading: "About me",
-    image: "images/about.svg",
+    heading: "About me",          // chữ watermark khổng lồ phía sau section
+    image: "images/about.svg",    // ảnh chân dung (nên dùng ảnh dọc)
+    background: "images/hero.svg",// ảnh nền mờ của cả section (để "" nếu không dùng)
     paragraphs: [
       "Tốt nghiệp chuyên ngành Ngôn ngữ Anh, được đào tạo bài bản về kỹ năng dẫn chương trình, Minh Tiên đã đồng hành cùng hàng trăm sự kiện lớn nhỏ trong hơn 5 năm hoạt động.",
       "Với chất giọng ấm, phát âm chuẩn và khả năng ứng biến linh hoạt bằng cả tiếng Việt lẫn tiếng Anh, Minh Tiên mang đến trải nghiệm dẫn dắt chỉn chu cho mọi loại hình chương trình — từ hội nghị doanh nghiệp trang trọng đến lễ hội sôi động.",

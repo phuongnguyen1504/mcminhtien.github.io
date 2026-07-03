@@ -9,7 +9,7 @@
   <!-- Font giống phong cách trang tham khảo: Playfair Display (tiêu đề) + Quicksand (nội dung) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Quicksand:wght@300;400;500;600;700&display=swap&subset=vietnamese" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Quicksand:wght@300;400;500;600;700&family=Dancing+Script:wght@500;600&display=swap&subset=vietnamese" rel="stylesheet" />
 
   <!-- Swiper 8 — thư viện carousel (giống trang tham khảo mcthanhhuyen.com) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@8.4.7/swiper-bundle.min.css" />
@@ -55,20 +55,25 @@
       </div>
     </section>
 
-    <!-- ============ 3. GIỚI THIỆU ============ -->
+    <!-- ============ 3. GIỚI THIỆU (bố cục giống trang tham khảo) ============ -->
     <section class="about section" id="gioi-thieu">
+      <!-- Chữ watermark khổng lồ phía sau nội dung -->
+      <div class="about-watermark" id="about-watermark" aria-hidden="true"></div>
       <div class="container about-grid">
+        <!-- Cột 1: tên (font viết tay) + đoạn giới thiệu nghiêng -->
+        <div class="about-intro reveal">
+          <h2 class="about-name" id="about-name"></h2>
+          <div class="about-lead" id="about-paragraphs"></div>
+        </div>
+        <!-- Cột 2: thẻ kính mờ chứa các thông tin cá nhân -->
+        <div class="about-facts-card reveal" id="about-facts"></div>
+        <!-- Cột 3: ảnh chân dung -->
         <div class="about-photo reveal">
           <img id="about-image" src="" alt="Chân dung MC" loading="lazy" />
         </div>
-        <div class="about-text reveal">
-          <p class="section-kicker">Giới thiệu</p>
-          <h2 class="section-title" id="about-heading"></h2>
-          <div id="about-paragraphs"></div>
-          <ul class="about-facts" id="about-facts"></ul>
-        </div>
+        <!-- Cột 4: các thẻ số liệu chạy counter -->
+        <div class="about-counters" id="about-stats"></div>
       </div>
-      <div class="container stats-grid" id="about-stats"><!-- Counter render từ data.js --></div>
     </section>
 
     <!-- ============ 4. LĨNH VỰC HOẠT ĐỘNG ============ -->
