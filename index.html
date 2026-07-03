@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MC Minh Tiên — MC Sự Kiện Song Ngữ Chuyên Nghiệp</title>
+  <meta name="description" content="MC Minh Tiên — MC sự kiện song ngữ Việt–Anh chuyên nghiệp: hội nghị, gala dinner, lễ hội, tiệc cưới, hội thảo." />
+
+  <!-- Font giống phong cách trang tham khảo: Playfair Display (tiêu đề) + Quicksand (nội dung) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Quicksand:wght@300;400;500;600;700&display=swap&subset=vietnamese" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ============ HEADER / MENU ============ -->
+  <header class="site-header" id="site-header">
+    <div class="container header-inner">
+      <a href="#top" class="logo" id="logo"><!-- Tên thương hiệu render từ data.js --></a>
+      <nav class="main-nav" id="main-nav"><!-- Menu render từ data.js --></nav>
+      <div class="header-actions">
+        <a href="#" id="profile-link" class="btn btn-outline btn-sm" target="_blank" rel="noopener">Profile</a>
+        <button class="nav-toggle" id="nav-toggle" aria-label="Mở menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+
+    <!-- ============ 1. HERO ============ -->
+    <section class="hero" id="hero">
+      <div class="hero-bg" id="hero-bg"></div>
+      <div class="container hero-content reveal">
+        <p class="hero-kicker" id="hero-tagline"></p>
+        <h1 class="hero-title" id="hero-name"></h1>
+        <p class="hero-slogan" id="hero-slogan"></p>
+        <a href="#lien-he" class="btn btn-gold">Đặt lịch ngay</a>
+      </div>
+    </section>
+
+    <!-- ============ 2. TESTIMONIAL ============ -->
+    <section class="testimonial section" id="testimonial">
+      <div class="container narrow reveal">
+        <blockquote>
+          <p id="testimonial-quote"></p>
+          <cite id="testimonial-author"></cite>
+        </blockquote>
+      </div>
+    </section>
+
+    <!-- ============ 3. GIỚI THIỆU ============ -->
+    <section class="about section" id="gioi-thieu">
+      <div class="container about-grid">
+        <div class="about-photo reveal">
+          <img id="about-image" src="" alt="Chân dung MC" loading="lazy" />
+        </div>
+        <div class="about-text reveal">
+          <p class="section-kicker">Giới thiệu</p>
+          <h2 class="section-title" id="about-heading"></h2>
+          <div id="about-paragraphs"></div>
+          <ul class="about-facts" id="about-facts"></ul>
+        </div>
+      </div>
+      <div class="container stats-grid" id="about-stats"><!-- Counter render từ data.js --></div>
+    </section>
+
+    <!-- ============ 4. LĨNH VỰC HOẠT ĐỘNG ============ -->
+    <section class="services section section-dark" id="linh-vuc">
+      <div class="container">
+        <p class="section-kicker reveal">Chuyên môn</p>
+        <h2 class="section-title reveal">Lĩnh vực hoạt động</h2>
+        <div class="card-grid cols-4" id="services-grid"></div>
+      </div>
+    </section>
+
+    <!-- ============ 5. CHƯƠNG TRÌNH NỔI BẬT ============ -->
+    <section class="programs section" id="chuong-trinh">
+      <div class="container">
+        <p class="section-kicker reveal">Dự án tiêu biểu</p>
+        <h2 class="section-title reveal">Chương trình nổi bật</h2>
+        <div class="card-grid cols-3" id="programs-grid"></div>
+      </div>
+    </section>
+
+    <!-- ============ 6. KHOẢNH KHẮC ĐÁNG NHỚ (GALLERY) ============ -->
+    <section class="gallery section section-dark" id="khoanh-khac">
+      <div class="container">
+        <p class="section-kicker reveal">Thư viện ảnh</p>
+        <h2 class="section-title reveal">Khoảnh khắc đáng nhớ</h2>
+        <div class="gallery-grid" id="gallery-grid"></div>
+      </div>
+    </section>
+
+    <!-- ============ 7. VIDEO ============ -->
+    <section class="videos section" id="video">
+      <div class="container">
+        <p class="section-kicker reveal">Showreel</p>
+        <h2 class="section-title reveal">Video</h2>
+        <p class="section-desc reveal" id="video-intro"></p>
+        <div class="card-grid cols-2" id="videos-grid"></div>
+      </div>
+    </section>
+
+    <!-- ============ 8. FAQ ============ -->
+    <section class="faq section section-dark" id="faq">
+      <div class="container narrow">
+        <p class="section-kicker reveal">Hỏi & đáp</p>
+        <h2 class="section-title reveal">Câu hỏi thường gặp</h2>
+        <div id="faq-list"></div>
+      </div>
+    </section>
+
+    <!-- ============ 9. ĐỐI TÁC ============ -->
+    <section class="partners section" id="doi-tac">
+      <div class="container">
+        <p class="section-kicker reveal">Đồng hành cùng</p>
+        <h2 class="section-title reveal">Đối tác & Khách hàng</h2>
+      </div>
+      <div class="partners-marquee" id="partners-marquee"><div class="marquee-track" id="marquee-track"></div></div>
+    </section>
+
+    <!-- ============ 10. CTA / LIÊN HỆ ============ -->
+    <section class="cta section section-dark" id="lien-he">
+      <div class="container narrow reveal">
+        <h2 class="cta-heading" id="cta-heading"></h2>
+        <p id="cta-text"></p>
+        <a href="#" id="cta-button" class="btn btn-gold"></a>
+        <div class="contact-lines" id="contact-lines"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="site-footer">
+    <div class="container">
+      <p id="footer-copy"></p>
+    </div>
+  </footer>
+
+  <!-- Lightbox xem ảnh lớn -->
+  <div class="lightbox" id="lightbox" hidden>
+    <button class="lightbox-close" id="lightbox-close" aria-label="Đóng">&times;</button>
+    <button class="lightbox-prev" id="lightbox-prev" aria-label="Ảnh trước">&#10094;</button>
+    <img id="lightbox-img" src="" alt="Ảnh phóng to" />
+    <button class="lightbox-next" id="lightbox-next" aria-label="Ảnh sau">&#10095;</button>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
