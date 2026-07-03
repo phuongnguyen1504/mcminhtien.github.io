@@ -78,11 +78,166 @@
   }
 
   function renderServices() {
-    $("#services-grid").innerHTML = D.services.map(cardHTML).join("");
+    // Render carousel for services (autoplay 4s)
+    createCarousel("#services-grid", D.services, { visibleSlides: 3, autoplay: 4000 });
   }
 
   function renderPrograms() {
-    $("#programs-grid").innerHTML = D.programs.map(cardHTML).join("");
+    // Render carousel for programs (show larger slide, autoplay 4s)
+    createCarousel("#programs-grid", D.programs, { visibleSlides: 1, autoplay: 4000 });
+  }
+
+  /* ---------- Carousel builder (reusable) ---------- */
+  function createCarousel(containerSelector, items, opts = {}) {
+    const container = document.querySelector(containerSelector);
+    if (!container) return;
+    // Remove grid classes (card-grid / cols-*) so carousel can be full-width
+    container.classList.remove('card-grid', 'cols-4', 'cols-3', 'cols-2');
+    // build markup
+    const trackId = containerSelector.replace(/[#.]/g, "") + "-carousel";
+    container.innerHTML = `
+      <div class="carousel" id="${trackId}" tabindex="0">
+        <div class="carousel-track"></div>
+        <div class="carousel-nav">
+          <button class="carousel-prev" aria-label="Trước">&#10094;</button>
+          <button class="carousel-next" aria-label="Sau">&#10095;</button>
+        </div>
+        <div class="carousel-thumbs" aria-hidden="false"></div>
+      </div>`;
+
+    const carousel = container.querySelector(".carousel");
+    const track = carousel.querySelector(".carousel-track");
+    const thumbs = carousel.querySelector(".carousel-thumbs");
+    const prevBtn = carousel.querySelector(".carousel-prev");
+    const nextBtn = carousel.querySelector(".carousel-next");
+
+    // populate slides
+    track.innerHTML = items
+      .map((it) => `<div class="carousel-slide">${cardHTML(it)}</div>`) 
+      .join("");
+    thumbs.innerHTML = items
+      .map((it, i) => `<button class="carousel-thumb" data-index="${i}" aria-label="Xem ${i+1}"><img src="${it.image}" alt="thumb-${i}"></button>`) 
+      .join("");
+
+    const slides = Array.from(track.children);
+    const thumbBtns = Array.from(thumbs.children);
+    let index = 0;
+    let isDragging = false, startX = 0, currentTranslate = 0;
+    const autoplayMs = opts.autoplay || 0;
+    let autoplayTimer = null;
+    // responsive visibleSlides: adapt to viewport
+    function computeVisible() {
+      const defaultVisible = opts.visibleSlides || 1;
+      const w = window.innerWidth;
+      if (w <= 480) return 1;
+      if (w <= 1024) return Math.min(defaultVisible, 2);
+      return defaultVisible;
+    }
+
+    function applySlideSizing() {
+      const visible = computeVisible();
+      slides.forEach((s) => {
+        s.style.flex = `0 0 ${100 / visible}%`;
+      });
+    }
+    applySlideSizing();
+
+    function update() {
+      const activeSlide = slides[index];
+      // center active slide inside carousel and clamp
+      const containerWidth = carousel.clientWidth;
+      const slideCenter = activeSlide.offsetLeft + activeSlide.offsetWidth / 2;
+      let offset = slideCenter - containerWidth / 2;
+      const maxOffset = Math.max(0, track.scrollWidth - containerWidth);
+      offset = Math.max(0, Math.min(offset, maxOffset));
+      track.style.transform = `translateX(${-offset}px)`;
+      // active class
+      slides.forEach((s, i) => s.classList.toggle('active', i === index));
+      thumbBtns.forEach((b, i) => b.classList.toggle("active", i === index));
+
+      // parallax: translate inner images subtly based on distance from center
+      slides.forEach((s) => {
+        const img = s.querySelector('.card-media img');
+        if (!img) return;
+        const sCenter = s.offsetLeft + s.offsetWidth / 2;
+        // relative position -1..1
+        const rel = ((sCenter - offset) - containerWidth / 2) / containerWidth;
+        const maxShift = 12; // percent
+        const shift = Math.max(-1, Math.min(1, rel)) * maxShift;
+        img.style.transform = `translateX(${ -shift }%)`;
+      });
+    }
+
+    function goto(i) {
+      index = ((i % slides.length) + slides.length) % slides.length;
+      update();
+      // reset autoplay timer when user explicitly navigates
+      if (autoplayMs) {
+        stopAutoplay(); startAutoplay();
+      }
+    }
+
+    prevBtn.addEventListener("click", () => goto(index - 1));
+    nextBtn.addEventListener("click", () => goto(index + 1));
+
+    // click thumb
+    thumbs.addEventListener("click", (e) => {
+      const b = e.target.closest(".carousel-thumb");
+      if (!b) return;
+      goto(Number(b.dataset.index));
+    });
+
+    // keyboard
+    carousel.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft") goto(index - 1);
+      if (e.key === "ArrowRight") goto(index + 1);
+    });
+
+    // swipe support (pointer events)
+    track.addEventListener("pointerdown", (e) => {
+      isDragging = true; startX = e.clientX; track.setPointerCapture(e.pointerId);
+      // pause autoplay while dragging
+      if (autoplayMs) stopAutoplay();
+    });
+    track.addEventListener("pointermove", (e) => {
+      if (!isDragging) return;
+      const dx = e.clientX - startX;
+      track.style.transform = `translateX(${ -slides[index].offsetLeft + dx }px)`;
+    });
+    track.addEventListener("pointerup", (e) => {
+      if (!isDragging) return; isDragging = false;
+      const dx = e.clientX - startX;
+      if (dx < -40) goto(index + 1);
+      else if (dx > 40) goto(index - 1);
+      else update();
+      // resume autoplay after interaction
+      if (autoplayMs) startAutoplay();
+    });
+    track.addEventListener("pointercancel", () => { isDragging = false; update(); });
+
+    // reposition on resize
+    window.addEventListener("resize", () => { applySlideSizing(); setTimeout(update, 80); });
+
+    // initial
+    update();
+
+    // autoplay helpers
+    function startAutoplay() {
+      if (!autoplayMs) return;
+      stopAutoplay();
+      autoplayTimer = setInterval(() => goto(index + 1), autoplayMs);
+    }
+    function stopAutoplay() {
+      if (autoplayTimer) { clearInterval(autoplayTimer); autoplayTimer = null; }
+    }
+    if (autoplayMs) {
+      // pause on hover/focus
+      carousel.addEventListener('mouseenter', stopAutoplay);
+      carousel.addEventListener('mouseleave', startAutoplay);
+      carousel.addEventListener('focusin', stopAutoplay);
+      carousel.addEventListener('focusout', startAutoplay);
+      startAutoplay();
+    }
   }
 
   /* ---------- Gallery + lightbox ---------- */
